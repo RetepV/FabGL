@@ -886,6 +886,8 @@ struct EmuState {
 class Terminal : public Stream {
 
 public:
+  
+  friend class TerminalController;
 
   Terminal();
 
@@ -1023,6 +1025,13 @@ public:
    *     Terminal.setBackgroundColor(Color::Black);
    */
   void setBackgroundColor(Color color, bool setAsDefault = true);
+ 
+  /**
+   * @brief Gets the current background color.
+   *
+   * @return The current background color.
+   */
+  Color getBackgroundColor() { return m_emuState.backgroundColor; }; 
 
   /**
    * @brief Sets the foreground color.
@@ -1038,6 +1047,13 @@ public:
    *     Terminal.setForegroundColor(Color::White);
    */
   void setForegroundColor(Color color, bool setAsDefault = true);
+ 
+  /**
+   * @brief Gets the current foreground color.
+   *
+   * @return The current foreground color.
+   */
+  Color getForegroundColor() { return m_emuState.foregroundColor; }; 
 
   /**
    * @brief Clears the screen.
@@ -1082,6 +1098,103 @@ public:
    * @param value If true the cursor becomes visible.
    */
   void enableCursor(bool value);
+
+  /**
+   * @brief Enables or disables adding an extra LF for every received CR.
+   *
+   * @param value If true then extra LF is added when a CR is received.
+   */
+  void enableNewLineMode(bool enable) {
+    m_emuState.newLineMode = enable;
+  }
+
+  /**
+   * @brief Enables or disables smooth scrolling.
+   *
+   * @param value If true then smooth scrolling is enabled.
+   */
+  void enableSmoothScroll(bool enable) {
+    m_emuState.smoothScroll = enable;
+  }
+  
+  /**
+   * @brief Enables or disables key autorepeat.
+   *
+   * @param value If true then key autorepeat is enabled.
+   */
+  void enableKeyAutorepeat(bool enable) {
+    m_emuState.keyAutorepeat = enable;
+  }
+
+  /**
+   * @brief Enables or disables cursor blinking.
+   *
+   * @param value If true then cursor blinks.
+   */
+  void enableCursorBlinking(bool enable) {
+    m_emuState.cursorBlinkingEnabled = enable;
+  }
+
+  /**
+   * @brief Set cursor style.
+   *
+   * @param value Cursor style
+   *
+   * Style:
+   * 0..2:      block
+   * 3..4:      underline
+   * 5..6:      bar
+   */
+  void setCursorStyle(int style) {
+    m_emuState.cursorStyle = style;
+  }
+
+  /**
+   * @brief Set backspace mode.
+   *
+   * @param mode True = BS, false = DEL
+   */
+  void setBackarrowKeyMode(bool mode) {
+    m_emuState.backarrowKeyMode = mode;
+  }
+
+  /**
+   * @brief Set wraparound.
+   *
+   * @param mode True = wraparound
+   *             False = cursor does not wrap but stays in right column, last character is being overwritten.
+   */
+  void setWrapAround(bool mode) {
+    m_emuState.wraparound = mode;
+  }
+
+  /**
+   * @brief Set reverse wraparound.
+   *
+   * @param mode True = reverse wraparound
+   *             False = cursor does not wrap but stays in left column when backspacing.
+   */
+  void setReverseWrapAroundMode(bool mode) {
+    m_emuState.reverseWraparoundMode = mode;
+  }
+
+  /**
+   * @brief Returns current cursor column.
+   *
+   * @return The current cursor column.
+   */
+  int cursorCol() {
+    return m_emuState.cursorX;
+  }
+
+  /**
+   * @brief Returns current cursor row.
+   *
+   * @return The current cursor row.
+   */
+  int cursorRow() {
+    return m_emuState.cursorY;
+  }
 
   /**
    * @brief Determines number of codes that the display input queue can still accept.
@@ -1260,6 +1373,13 @@ public:
   Canvas * canvas() { return m_canvas; }
 
   /**
+   * @brief Gets associated font object.
+   *
+   * @return The FontInfo object.
+   */
+  FontInfo font() { return m_font; }
+
+  /**
    * @brief Activates this terminal for input and output.
    *
    * Only one terminal can be active at the time, for input and output.
@@ -1355,7 +1475,7 @@ public:
    * Parameter contains the character received
    */
   Delegate<uint8_t> onReceive;
-  
+
   /**
    * @brief Delegate called whenever the terminal is ready to send
    *
@@ -1410,6 +1530,10 @@ public:
    */
   static int keyboardReaderTaskStackSize;
 
+
+protected:
+
+  EmuState           m_emuState;
 
 private:
 
@@ -1567,8 +1691,6 @@ private:
 
   PaintOptions       m_paintOptions;
   GlyphOptions       m_glyphOptions;
-
-  EmuState           m_emuState;
 
   Color              m_defaultForegroundColor;
   Color              m_defaultBackgroundColor;
@@ -1826,7 +1948,6 @@ public:
    * @param enabled If true the style is enabled, if false the style is disabled
    */
   void setCharStyle(CharStyle style, bool enabled);
-
 
   //// Delegates ////
 
