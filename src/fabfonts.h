@@ -46,6 +46,7 @@
 #include "fonts/font_7x13.h"
 #include "fonts/font_7x14.h"
 #include "fonts/font_8x13.h"
+#include "fonts/font_8x7.h"
 #include "fonts/font_8x8.h"
 #include "fonts/font_8x9.h"
 #include "fonts/font_8x14.h"
@@ -53,7 +54,9 @@
 #include "fonts/font_8x19.h"
 #include "fonts/font_9x15.h"
 #include "fonts/font_9x18.h"
+#include "fonts/font_10x19_DEC.h"
 #include "fonts/font_10x20.h"
+#include "fonts/font_10x20_DEC.h"
 
 #include "fonts/font_slant_8x14.h"
 #include "fonts/font_sanserif_8x16.h"
