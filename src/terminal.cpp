@@ -1636,6 +1636,11 @@ size_t Terminal::write(const uint8_t * buffer, size_t size)
   return size;
 }
 
+void Terminal::enableLocalMode(bool on)
+{
+  m_localMode = on;
+}
+
 
 void Terminal::setTerminalType(TermType value)
 {
@@ -2024,7 +2029,11 @@ uint8_t Terminal::getNextCode(bool processCtrlCodes)
     logFmt("<= %02X  %s%c\n", (int)c, (c <= ASCII_SPC ? CTRLCHAR_TO_STR[(int)c] : ""), (c > ASCII_SPC ? c : ASCII_SPC));
     #endif
 
-    onReceive(c);
+    if (m_localMode) {
+      onLocalModeReceive(c);
+    } else {
+       onReceive(c);
+    }
 
     // inside an ESC sequence we may find control characters!
     if (processCtrlCodes && ISCTRLCHAR(c))
@@ -4274,44 +4283,49 @@ void Terminal::keyboardReaderTask(void * pvParameters)
     if (term->m_keyboard->getNextVirtualKey(&item)) {
 
       if (term->isActive()) {
-      
-        term->onVirtualKey(&item.vk, item.down);
-        term->onVirtualKeyItem(&item);
 
-        bool readyToSend = true;
-        term->onReadyToSend(&readyToSend);
+	if (term->isInLocalMode()) {
+	  term->onLocalModeVirtualKeyItem(&item);
+	} else {
+   
+          term->onVirtualKey(&item.vk, item.down);
+          term->onVirtualKeyItem(&item);
 
-        if (readyToSend) {
+          bool readyToSend = true;
+          term->onReadyToSend(&readyToSend);
 
-          // note: when flow is locked, no key event is reinjected. This to allow onVirtualKey to always work on last pressed char.
-
-          if (item.down) {
-
-            if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == item.vk)
-              continue; // don't repeat
-            term->m_lastPressedKey = item.vk;
-
-            xSemaphoreTake(term->m_mutex, portMAX_DELAY);
-
-            if (term->m_termInfo == nullptr) {
-              if (term->m_emuState.ANSIMode)
-                term->ANSIDecodeVirtualKey(item);
-              else
-                term->VT52DecodeVirtualKey(item);
-            } else
-              term->TermDecodeVirtualKey(item);
-
-            xSemaphoreGive(term->m_mutex);
-
-          } else {
-            // !keyDown
-            term->m_lastPressedKey = VK_NONE;
+          if (readyToSend) {
+  
+            // note: when flow is locked, no key event is reinjected. This to allow onVirtualKey to always work on last pressed char.
+  
+            if (item.down) {
+  
+              if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == item.vk)
+                continue; // don't repeat
+              term->m_lastPressedKey = item.vk;
+  
+              xSemaphoreTake(term->m_mutex, portMAX_DELAY);
+  
+              if (term->m_termInfo == nullptr) {
+                if (term->m_emuState.ANSIMode)
+                  term->ANSIDecodeVirtualKey(item);
+                else
+                  term->VT52DecodeVirtualKey(item);
+              } else
+                term->TermDecodeVirtualKey(item);
+  
+              xSemaphoreGive(term->m_mutex);
+  
+            } else {
+              // !keyDown
+              term->m_lastPressedKey = VK_NONE;
+            }
+            
           }
-          
-        }
+	}
 
       } else {
-        // not active, reinject back
+          // not active, reinject back
         term->m_keyboard->injectVirtualKey(item, true);
       }
 
@@ -4872,8 +4886,6 @@ void TerminalController::setCharStyle(CharStyle style, bool enabled)
   write(enabled ? 1 : 0);
   write(FABGLEXT_ENDCODE);
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////

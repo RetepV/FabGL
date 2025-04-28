@@ -1224,6 +1224,26 @@ public:
    */
   void send(char const * str);
 
+  /**
+    * @brief Switch between local mode or remote mode. In remote mode (default) all data from RS-232
+    * will be shown on the screen and all keypresses will be sent to the remote, normal delegates
+    * are called. In local mode, the remote is ignored (RS-232 will remain silent and ignored) and
+    * normal delegates will not be called. This is useful if you want the local application to have
+    * full control of the terminal screen and the keyboard, e.g. for setup screens.
+    *
+    * NOTE: There is not enough memory to save the screens when switching between local and remote
+    *       mode, so the screen will be cleared.
+    *
+    * @param on If true, enable local mode. If false, enable remote mode.
+    */
+  void enableLocalMode(bool on);
+
+  /**
+   * @brief Determines if this terminal is active or not.
+   *
+   * @return True is this terminal is active for input and output.
+   */
+  bool isInLocalMode() { return m_localMode; }
 
   /**
    * @brief Gets associated keyboard object.
@@ -1343,8 +1363,23 @@ public:
    */
   Delegate<bool *> onReadyToSend;
 
+  /**
+    * @brief Delegate called when the terminal is in local mode, and a virtual key is pressed. This
+    * is useful for local setup screens.
+    *
+    * Parameter is the virtual key item.
+    */
+  Delegate<VirtualKeyItem *> onLocalModeVirtualKeyItem;
 
-
+  /**
+    * @brief Delegate called when the terminal is in local mode, and the application writes something
+    * to the terminal screen (e.g. using the write() function). This is useful for local setup screens
+    * to detect when something is written to the terminal screen (as writing to the terminal screen is
+    * asynchronous). For instance, it can be used to temporarily switch off/on user interactivity based
+    * on ASCII codes (e.g. STX and ETX).
+    */
+   Delegate<uint8_t> onLocalModeReceive;
+  
   // statics (used for common default properties)
 
 
@@ -1604,6 +1639,10 @@ private:
   bool                      m_coloredAttributesMaintainStyle;
   int                       m_coloredAttributesMask;    // related bit 1 if enabled
   Color                     m_coloredAttributesColor[4];
+
+  // Terminal is in local mode (true) or remote mode (false, default). In local mode terminal writes and keyboard reads
+  // are kept local and not transmitted through the serial port. Also, in local mode local mode callbacks (onLocalVirtualKey and onLocalRead) are called.
+  bool                      m_localMode;
   
   // true if inside ::end()
   volatile bool             m_endingState;
@@ -1935,7 +1974,6 @@ public:
    * @param value If True insert mode is enabled (default), if False insert mode is disabled.
    */
   void setInsertMode(bool value) { m_insertMode = value; }
-
 
   // delegates
 
