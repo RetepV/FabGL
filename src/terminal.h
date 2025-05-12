@@ -1442,14 +1442,12 @@ public:
    */
   Delegate<VirtualKey *, bool> onVirtualKey;
 
-
   /**
    * @brief Delegate called whenever a new virtual key is received from keyboard, including shift states
    *
    * The parameter is a pointer to the decoded virtual key info
    */
   Delegate<VirtualKeyItem *> onVirtualKeyItem;
-
 
   /**
    * @brief Delegate called whenever a new user sequence has been received
@@ -1460,7 +1458,13 @@ public:
    */
   Delegate<char const *> onUserSequence;
   
-  
+  /**
+   * @brief Delegate called whenever the terminal is ready to send
+   *
+   * Parameter contains a reference to bool. It can be changed to False if received is not ready.
+   */
+  Delegate<bool *> onReadyToSend;
+
   /**
    * @brief Delegate called whenever the terminal need to send a character
    *
@@ -1477,11 +1481,28 @@ public:
   Delegate<uint8_t> onReceive;
 
   /**
-   * @brief Delegate called whenever the terminal is ready to send
+   * @brief Delegate called whenever the terminal needs to send a character
    *
-   * Parameter contains a reference to bool. It can be changed to False if received is not ready.
+   * This delegate call is done right after onSend is called, and is called in exactly the
+   * same cases. It can be used by the application to eavesdrop on the communication between
+   * the Terminal and the SerialPort driver. For instance to pass anything sent to a
+   * Bluetooth Serial Port.
+   *
+   * Parameter contains the character send
    */
-  Delegate<bool *> onReadyToSend;
+  Delegate<uint8_t> userOnSend;
+
+  /**
+   * @brief Delegate called whenever the terminal receives a character
+   *
+   * This delegate call is done right after onReceive is called, and is called in exactly the
+   * same cases. It can be used by the application to eavesdrop on the communication between
+   * the Terminal and the SerialPort driver. For instance to pass anything received to a
+   * Bluetooth Serial Port.
+   *
+   * Parameter contains the character received
+   */
+  Delegate<uint8_t> userOnReceive;
 
   /**
     * @brief Delegate called when the terminal is in local mode, and a virtual key is pressed. This

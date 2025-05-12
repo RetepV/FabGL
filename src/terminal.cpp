@@ -1537,6 +1537,7 @@ void Terminal::send(uint8_t c)
   #endif
 
   onSend(c);
+  userOnSend(c);
     
   localWrite(c);  // write to m_outputQueue
 }
@@ -1546,8 +1547,11 @@ void Terminal::send(uint8_t c)
 void Terminal::send(char const * str)
 {
   auto s = str;
-  while (*s)
-    onSend(*s++);
+  while (*s) {
+    onSend(*s);
+    userOnSend(*s);
+    s++;
+  }
 
   localWrite(str);  // write to m_outputQueue
 }
@@ -2033,6 +2037,7 @@ uint8_t Terminal::getNextCode(bool processCtrlCodes)
       onLocalModeReceive(c);
     } else {
        onReceive(c);
+       userOnReceive(c);
     }
 
     // inside an ESC sequence we may find control characters!
