@@ -370,6 +370,15 @@ public:
 
   static uint8_t convScancodeSet2To1(uint8_t code);
 
+  bool isShiftDown() { return m_SHIFT; }
+  bool isCtrlDown() { return m_CTRL; }
+  bool isLAltDown() { return m_LALT; }
+  bool isRAltDown() { return m_RALT; }
+  bool isCapsLock() { return m_CAPSLOCK; }
+  bool isGUI() { return m_GUI; }
+  bool isNumLock() { return m_NUMLOCK; }
+  bool isScrollLock() { return m_SCROLLLOCK; }
+
 #if FABGLIB_HAS_VirtualKeyO_STRING
   static char const * virtualKeyToString(VirtualKey virtualKey);
 #endif
