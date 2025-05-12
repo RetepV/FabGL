@@ -1,4 +1,10 @@
 # FabGL
+
+======================================================================================================
+### This specific branch contains a patched version of the FabGL library specifically for use with nTerm2-S. These patches are not contained in the library that you download via Library Manager of the Arduino environment. ###
+======================================================================================================
+
+
 ### **ESP32** Display Controller (VGA, Color NTSC/PAL Composite, I2C and SPI displays), PS/2 Mouse and Keyboard Controller, Graphics Library, Sound Engine, Graphical User Interface (GUI), Game/Emulation Engine and ANSI/VT Terminal
 
 # Warning! The latest version of the Espressif ESP32 library that FabGL runs on is *2.0.17* (or even earlier). Unfortunately, the latest versions of Espressif leave too little memory free for applications, and a project the size of FabGL can no longer function as intended.
