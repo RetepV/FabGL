@@ -44,6 +44,14 @@
 namespace fabgl {
 
 
+struct CanvasState {
+  int                 penWidth;
+  RGB888              penColor;
+  RGB888              brushColor;
+  GlyphOptions        glyphOptions;
+};
+
+
 
 /**
 * @brief A class with a set of drawing methods.
@@ -565,6 +573,10 @@ public:
 
   void renderGlyphsBuffer(int itemX, int itemY, GlyphsBuffer const * glyphsBuffer);
 
+  struct CanvasState getCanvasState();
+
+  void setCanvasState(struct CanvasState state);
+
   /**
    * @brief Sets paint options.
    */
@@ -766,6 +778,8 @@ private:
 
   Point               m_origin;
   Rect                m_clippingRect;
+
+  struct CanvasState  m_canvasState;
 };
 
 

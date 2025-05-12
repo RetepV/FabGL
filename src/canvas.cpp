@@ -198,6 +198,8 @@ void Canvas::setPenColor(uint8_t red, uint8_t green, uint8_t blue)
 
 void Canvas::setPenColor(RGB888 const & color)
 {
+  m_canvasState.penColor = color;
+  
   Primitive p;
   p.cmd = PrimitiveCmd::SetPenColor;
   p.color = color;
@@ -219,6 +221,8 @@ void Canvas::setBrushColor(uint8_t red, uint8_t green, uint8_t blue)
 
 void Canvas::setPenWidth(int value)
 {
+  m_canvasState.penWidth = value;
+
   Primitive p;
   p.cmd = PrimitiveCmd::SetPenWidth;
   p.ivalue = value;
@@ -237,6 +241,8 @@ void Canvas::setLineEnds(LineEnds value)
 
 void Canvas::setBrushColor(RGB888 const & color)
 {
+  m_canvasState.brushColor = color;
+
   Primitive p;
   p.cmd = PrimitiveCmd::SetBrushColor;
   p.color = color;
@@ -357,6 +363,8 @@ void Canvas::renderGlyphsBuffer(int itemX, int itemY, GlyphsBuffer const * glyph
 
 void Canvas::setGlyphOptions(GlyphOptions options)
 {
+  m_canvasState.glyphOptions = options;
+
   Primitive p;
   p.cmd = PrimitiveCmd::SetGlyphOptions;
   p.glyphOptions = options;
@@ -545,6 +553,17 @@ RGB888 Canvas::getPixel(int X, int Y)
   RGB888 rgb;
   m_displayController->readScreen(Rect(X, Y, X, Y), &rgb);
   return rgb;
+}
+
+struct CanvasState Canvas::getCanvasState() {
+  return m_canvasState;
+}
+
+void Canvas::setCanvasState(struct CanvasState state) {
+  setPenWidth(state.penWidth);
+  setPenColor(state.penColor);
+  setBrushColor(state.brushColor);
+  setGlyphOptions(state.glyphOptions);
 }
 
 
