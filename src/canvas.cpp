@@ -342,7 +342,6 @@ void Canvas::drawEllipse(int X, int Y, int width, int height)
   m_displayController->addPrimitive(p);
 }
 
-
 void Canvas::drawGlyph(int X, int Y, int width, int height, uint8_t const * data, int index)
 {
   Primitive p;
@@ -351,6 +350,16 @@ void Canvas::drawGlyph(int X, int Y, int width, int height, uint8_t const * data
   m_displayController->addPrimitive(p);
 }
 
+void Canvas::drawGlyphWithOptions(int X, int Y, int width, int height, uint8_t const * data, int index, GlyphOptions options, RGB888 penColor, RGB888 brushColor)
+{
+  Primitive p;
+  p.cmd   = PrimitiveCmd::DrawGlyphWithOptions;
+  p.glyphDesc = GlyphDesc(Glyph(X, Y, width, height, data + index * height * ((width + 7) / 8)),
+                          options,
+                          penColor,
+                          brushColor);
+  m_displayController->addPrimitive(p);
+}
 
 void Canvas::renderGlyphsBuffer(int itemX, int itemY, GlyphsBuffer const * glyphsBuffer)
 {
@@ -430,6 +439,26 @@ void Canvas::drawText(FontInfo const * fontInfo, int X, int Y, char const * text
     } else {
       // fixed width
       drawGlyph(X, Y, fontInfo->width, fontInfo->height, fontInfo->data, *text);
+    }
+  }
+}
+
+void Canvas::drawTextWithOptions(FontInfo const * fontInfo, int X, int Y, char const * text, bool wrap, GlyphOptions options, RGB888 penColor, RGB888 brushColor)
+{
+  int fontWidth = fontInfo->width;
+  for (; *text; ++text, X += fontWidth * m_textHorizRate) {
+    if (wrap && X >= getWidth()) {    // TODO: clipX2 instead of getWidth()?
+      X = 0;
+      Y += fontInfo->height;
+    }
+    if (fontInfo->chptr) {
+      // variable width
+      uint8_t const * chptr = fontInfo->data + fontInfo->chptr[(int)(*text)];
+      fontWidth = *chptr++;
+      drawGlyphWithOptions(X, Y, fontWidth, fontInfo->height, chptr, 0, options, penColor, brushColor);
+    } else {
+      // fixed width
+      drawGlyphWithOptions(X, Y, fontInfo->width, fontInfo->height, fontInfo->data, *text, options, penColor, brushColor);
     }
   }
 }

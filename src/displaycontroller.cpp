@@ -771,6 +771,9 @@ void IRAM_ATTR BitmappedDisplayController::execPrimitive(Primitive const & prim,
     case PrimitiveCmd::DrawGlyph:
       drawGlyph(prim.glyph, paintState().glyphOptions, paintState().penColor, paintState().brushColor, updateRect);
       break;
+    case PrimitiveCmd::DrawGlyphWithOptions:
+      drawGlyph(prim.glyphDesc.glyph, prim.glyphDesc.options, prim.glyphDesc.penColor, prim.glyphDesc.brushColor, updateRect);
+      break;
     case PrimitiveCmd::SetGlyphOptions:
       paintState().glyphOptions = prim.glyphOptions;
       break;

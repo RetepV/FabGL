@@ -126,6 +126,10 @@ enum PrimitiveCmd : uint8_t {
   // Draw a glyph (BW image)
   // params: glyph
   DrawGlyph,
+    
+  // Draw a glyph (BW image) with specific GlyphOptions, overriding the options set with SetGlyphOptions
+  // params: glyphDesc
+  DrawGlyphWithOptions,
 
   // Set paint options
   // params: glyphOptions
@@ -333,8 +337,8 @@ struct Glyph {
 
   Glyph() : X(0), Y(0), width(0), height(0), data(nullptr) { }
   Glyph(int X_, int Y_, int width_, int height_, uint8_t const * data_) : X(X_), Y(Y_), width(width_), height(height_), data(data_) { }
+  Glyph(const Glyph &glyph) : X(glyph.X), Y(glyph.Y), width(glyph.width), height(glyph.height), data(glyph.data) { }
 }  __attribute__ ((packed));
-
 
 
 /**
@@ -605,8 +609,19 @@ struct PixelDesc {
 } __attribute__ ((packed));
 
 
+struct GlyphDesc {
+  Glyph  glyph;
+  GlyphOptions options;
+  RGB888 penColor;
+  RGB888 brushColor;
+    
+  GlyphDesc(const Glyph &glyph_, GlyphOptions options_, RGB888 penColor_, RGB888 brushColor_) : glyph(Glyph(glyph_)), options(options_), penColor(penColor_), brushColor(brushColor_) { }
+} __attribute__ ((packed));
+
+
 struct Primitive {
   PrimitiveCmd cmd;
+    
   union {
     int16_t                ivalue;
     RGB888                 color;
@@ -620,6 +635,7 @@ struct Primitive {
     BitmapDrawingInfo      bitmapDrawingInfo;
     Path                   path;
     PixelDesc              pixelDesc;
+    GlyphDesc              glyphDesc;
     LineEnds               lineEnds;
     TaskHandle_t           notifyTask;
   } __attribute__ ((packed));

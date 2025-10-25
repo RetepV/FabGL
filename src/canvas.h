@@ -549,6 +549,31 @@ public:
   void drawGlyph(int X, int Y, int width, int height, uint8_t const * data, int index = 0);
 
   /**
+   * @brief Draws a glyph at specified position, using the passed options instead of the options set
+   *      to the Canvas.
+   *
+   * @param X Horizontal coordinate where to draw the glyph.
+   * @param Y Vertical coordinate where to draw the glyph.
+   * @param width Horizontal size of the glyph.
+   * @param height Vertical size of the glyph.
+   * @param data Memory buffer containing the glyph. Each line is byte aligned. The size must be "(width + 7) / 8 * height" (integer division!).
+   * @param index Optional index inside data. Use when the buffer contains multiple glyphs.
+   * @param options GlyphOptions to use for rendering this glyph.
+   * @param penColor Pen color to use for rendering this glyph.
+   * @param brushColor Brush color to use for rendering this glyph.
+   *
+   * Example:
+   *
+   *     // draw an 'A' using the predefined 8x8 font, but double width and in white on a blue background.
+   *     const fabgl::FontInfo * f = &fabgl::FONT_8x8;
+   *     const fabgl::GlyphOptions options;
+   *     options.value = 0;
+   *     options.doubleWidth = true;
+   *     Canvas.drawGlyph(0, 0, f->width, f->height, f->data, 0x41, options, RGB888(255,255,255), RGB888(0,255,0));
+   */
+  void drawGlyphWithOptions(int X, int Y, int width, int height, uint8_t const * data, int index, GlyphOptions options, RGB888 penColor, RGB888 brushColor);
+
+  /**
    * @brief Sets drawing options for the next glyphs.
    *
    * Setting glyph options allows to slightly change how a glyph is rendered, applying
@@ -660,6 +685,26 @@ public:
    */
   void drawText(FontInfo const * fontInfo, int X, int Y, char const * text, bool wrap = false);
 
+  /**
+   * @brief Draws a string at specified position, using the given options instead of the currently selected
+   *      glyph options and pen/brush colors.
+   *
+   * @param fontInfo Pointer to font structure containing font info and glyphs data.
+   * @param X Horizontal position of first character left side.
+   * @param Y Vertical position of first character top side.
+   * @param text String to draw (indexes in the character font glyphs set).
+   * @param wrap If true text is wrapped at the end of line.
+   * @param options GlyphOptions to use for rendering this glyph.
+   * @param penColor Pen color to use for rendering this glyph.
+   * @param brushColor Brush color to use for rendering this glyph.
+   *
+   * Example:
+   *
+   *     // Draw a 'Hello World!' at position 100, 100, in double with, with white letters on blue background.
+   *     Canvas.drawText(&fabgl::FONT_8x8, 100, 100, "Hellow World!", options, RGB888(255,255,255), RGB888(0,255,0));
+   */
+  void drawTextWithOptions(FontInfo const * fontInfo, int X, int Y, char const * text, bool wrap, GlyphOptions options, RGB888 penColor, RGB888 brushColor);
+    
   /**
    * @brief Draws a string at specified position. Add ellipses before truncation.
    *
