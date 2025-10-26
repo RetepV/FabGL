@@ -57,6 +57,7 @@ SerialPort::SerialPort()
   : m_initialized(false),
     m_RTSStatus(true),
     m_DTRStatus(true),
+    m_BRKStatus(false),
     m_flowControl(FlowControl::None),
     m_sentXOFF(false),
     m_recvXOFF(false),
@@ -339,6 +340,9 @@ void SerialPort::sendBreak(bool value)
 
   while (m_dev->status.txfifo_cnt == 0x7F)
     ;
+
+  m_BRKStatus = value;
+  
   if (value) {
     gpio_matrix_out(m_txPin, MATRIX_DETACH_OUT_SIG, m_inverted, false);
     configureGPIO(m_txPin, GPIO_MODE_OUTPUT);

@@ -221,6 +221,13 @@ public:
   bool RIStatus()                      { return m_riPin != GPIO_UNUSED ? gpio_get_level(m_riPin) == 0 : false; }
 
   /**
+   * @brief Reports current BRK signal status
+   *
+   * @return True if serial port is in BRK condition (low voltage)
+   */
+  bool BRKStatus()                     { return m_BRKStatus; }
+
+  /**
    * @brief Sends a byte
    *
    * @param value Byte to send
@@ -296,6 +303,7 @@ private:
   
   bool                      m_RTSStatus;      // true = asserted (low)
   bool                      m_DTRStatus;      // true = asserted (low)
+  bool                      m_BRKStatus;      // true = asserted (low)
   
   volatile FlowControl      m_flowControl;
   volatile bool             m_sentXOFF;       // true if XOFF has been sent or RTS is disabled (high)
