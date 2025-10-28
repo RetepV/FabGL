@@ -1,9 +1,7 @@
 # FabGL
 
-=================================================================================
-### This specific branch contains a patched version of the FabGL library specifically for use with nTerm2-S. These patches are not contained in the library that you download via Library Manager of the Arduino environment. ###
-=================================================================================
-
+>[!WARNING]
+>### This specific branch contains a patched version of the FabGL library specifically for use with nTerm2-S. These patches are not contained in the library that you download via Library >Manager of the Arduino environment. Therefore, if you want to use this specific library, download it as a .ZIP file, and add it to the Arduino environment libraries as a .ZIP file. ###
 
 ### **ESP32** Display Controller (VGA, Color NTSC/PAL Composite, I2C and SPI displays), PS/2 Mouse and Keyboard Controller, Graphics Library, Sound Engine, Graphical User Interface (GUI), Game/Emulation Engine and ANSI/VT Terminal
 
