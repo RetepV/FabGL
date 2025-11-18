@@ -54,9 +54,16 @@
 #include "fonts/font_8x19.h"
 #include "fonts/font_9x15.h"
 #include "fonts/font_9x18.h"
-#include "fonts/font_10x19_DEC.h"
 #include "fonts/font_10x20.h"
-#include "fonts/font_10x20_DEC.h"
+
+#include "fonts/sporosterm-5x7.h"
+#include "fonts/sporosterm-6x9.h"
+#include "fonts/sporosterm-8x14.h"
+#include "fonts/sporosterm-10x19.h"
+#include "fonts/sporosterm-10x20.h"
+#include "fonts/sporosterm-dec-10x19.h"
+#include "fonts/sporosterm-dec-10x20.h"
+
 
 #include "fonts/font_slant_8x14.h"
 #include "fonts/font_sanserif_8x16.h"
@@ -70,8 +77,6 @@
 #include "fonts/font_broadway_8x14.h"
 #include "fonts/font_oldengl_8x16.h"
 #include "fonts/font_wiggly_8x16.h"
-
-
 
 // variable width
 #include "fonts/font_std_12.h"
