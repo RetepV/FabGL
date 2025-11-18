@@ -1,136 +1,29 @@
 # FabGL
 
 >[!WARNING]
->### This specific branch contains a patched version of the FabGL library specifically for use with nTerm2-S/SporosTerm. These patches are not contained in the library that you download via Library >Manager of the Arduino environment. Therefore, if you want to use this specific library, download it as a .ZIP file, and add it to the Arduino environment libraries as a .ZIP file. ###
+>### This specific branch contains a patched version of the FabGL library specifically for use with nTerm2-S/SporosTerm. These patches are not contained in the library that you download via Library >Manager of the Arduino environment. ###
 
-### **ESP32** Display Controller (VGA, Color NTSC/PAL Composite, I2C and SPI displays), PS/2 Mouse and Keyboard Controller, Graphics Library, Sound Engine, Graphical User Interface (GUI), Game/Emulation Engine and ANSI/VT Terminal
+>[!IMPORTANT]
+>### Find the original information about the FabGL library here: https://github.com/fdivitto/FabGL ###
 
-# Warning! The latest version of the Espressif ESP32 library that FabGL runs on is *2.0.17* (or even earlier). Unfortunately, the latest versions of Espressif leave too little memory free for applications, and a project the size of FabGL can no longer function as intended.
+>[!WARNING]
+>The latest version of the Espressif ESP32 library that FabGL runs on is *2.0.17* (or even earlier). Unfortunately, the latest versions of Espressif leave too little memory free for applications, and a project the size of FabGL can no longer function as intended.
 
-**[Please look here for full API documentation](http://www.fabglib.org)**
+### How to use this library for SporosTerm ([http://github](https://github.com/RetepV/SporosTerm)) ###
 
-**[See also my youtube channel where you can find demos and tutorials](https://www.youtube.com/user/fdivitto/videos)**
+1. Make sure to be on the latest Arduino development environment.
+2. Follow the instructions at https://github.com/espressif/arduino-esp32 to install the ESP32 board support.
+3. After having installed the ESP32 board support, you will have to open the Arduino Boards Manager and find the entry 'esp32 by Espressif Systems'. Here, you will have to switch your installed version (probably 3.3.2 or later) to version 2.0.17. It is absolutely necessary to downgrade to 2.0.17, in order to compile the FabGL library.
+4. Download the patched FabGL library's source code from here: https://github.com/RetepV/FabGL/tree/FabGL-nTerm2-S. Doublecheck if you have the FabGL-nTerm2-S branch selected. Download the source code as a .zip file, it will probably be named FabGL-FabGL-nTerm2-S.zip.
+5. Download the SporosTerm source code and then open SporosTerm.ino in the Arduino development environment.
+6. In the Arduino development environment, go to Sketch->Include Library->Add .ZIP Library. Select the FabGL-FabGL-nTerm2-S.zip file, wait until Arduino finishes processing and tells that the library was installed successfully.
 
+In order to build SporosTerm, you will also need to include the OneWire library.
 
-You may support development by purchasing the [ESP32-SBC-FabGL](https://www.olimex.com/Products/Retro-Computers/ESP32-SBC-FabGL/open-source-hardware) Olimex board.
+7. In the Arduino development environment, now go to Sketch->Include Library->Manage Libraries and filter on onewire. Install the 'Onewire' library version 2.3.8 (by Jim Studt, Tom Pollard, Robin James and Paul Stoffregen.
 
-=================================================================================
+Now you can open the SporosTerm .ino, connect the nTerm2-S board to USB, choose 'ESP32 Dev Module' and the correct serial port (e.g. in my case /dev/cu.usbserial-DN01JQWK), choose a Partition Scheme that has a larger-than 1.5MB partition for the app (e.g. 'NO OTA (2MB APP/2MB SPIFFS)'), upload speed can be 921600 but depends on the quality of your cable, and now you should be able to compile and upload the sketch.
 
-License terms:
+>[!NOTE]
+>The app is about 1.32MB in size. The default Partition Scheme only allocates 1.2MB for the app, so the app won't fit. Therefore, in Tools->Partition Scheme you will need to choose a partition scheme with at least 1.5MB for the app. The exact scheme is up to you and your ESP32 type, but it needs storage for the app and some extra storage for the settings, which can be either SPIFFS (recommended) or FATFS. If your ESP32 has 4MB (which is quite usual), you can choose NO OTA (2MB APP/2MB SPIFFS). I personally use ESP32-WROOM-32E MGN16 modules with 16MB flash, but also choose the NO OTA (2MB APP/2MB SPIFFS) scheme for release. For development use, I use 16M Flash (3M APP/9.9M FATFS).
 
-Created by Fabrizio Di Vittorio (fdivitto2013@gmail.com) - <http://www.fabgl.com>
-
-Copyright (c) 2019-2022 Fabrizio Di Vittorio.
-
-All rights reserved.
-
-This library and related software is available under GPL v3.
-
-Please contact fdivitto2013@gmail.com if you need a commercial license.
-
-**Please don't remove copyright and/or original author from FabGL examples (ie from screens, dialogs, etc..), even from derived works which use examples as base.**
-
-=================================================================================
-
-
-FabGL is mainly a Graphics Library for ESP32. It implements several display drivers (VGA output, PAL/NTSC Color Composite, I2C and SPI displays).
-FabGL can also get input from a PS/2 Keyboard and a Mouse. FabGL implements also: an Audio Engine (DAC and Sigma-Delta), a Graphical User Interface (GUI), a Game Engine and an ANSI/VT Terminal.
-
-This library works with ESP32 revision 1 or upper. See [**Compatible Boards**][Boards].
-
-VGA output requires a external digital to analog converter (DAC): it can be done by three 270 Ohm resistors to have 8 colors, or by 6 resistors to have 64 colors.
-Composite output doesn't require external components (maybe a 5Mhz low pass filter).
-
-There are several fixed and variable width fonts embedded.
-
-Unlimited number of sprites are supported. However big sprites and a large amount of them reduces the frame rate and could generate flickering.
-
-When there is enough memory (on low resolutions like 320x200), it is possible to allocate two screen buffers, so to implement double buffering.
-In this case primitives are always drawn on the back buffer.
-
-Except for double buffering or when explicitly disabled, all drawings are performed on vertical retracing, so no flickering is visible.
-If the queue of primitives to draw is not processed before the vertical retracing ends, then it is interrupted and continued at next retracing.
-
-There is a graphical user interface (GUI) with overlapping windows and mouse handling and a lot of widgets (buttons, editboxes, checkboxes, comboboxes, listboxes, etc..).
-
-Finally, there is a sound engine, with multiple channels mixed to a mono output. Each channel can generate sine waveforms, square, etc... or custom sampled data.
-
-
-
-### Installation Tutorial - fabgl development board (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/F2f0_9_TJmM/hqdefault.jpg)](https://www.youtube.com/watch?v=F2f0_9_TJmM "")
-
-### Installation Tutorial - TTGO VGA32 (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/8OTaPQlSTas/hqdefault.jpg)](https://www.youtube.com/watch?v=8OTaPQlSTas "")
-
-### IBM PC Emulator (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/3I1U2nEoxIQ/hqdefault.jpg)](https://www.youtube.com/watch?v=3I1U2nEoxIQ "")
-
-### Space Invaders Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/LL8J7tjxeXA/hqdefault.jpg)](https://www.youtube.com/watch?v=LL8J7tjxeXA "")
-
-### Dev board connected to TFT ILI9341 240x320, TFT ST7789 240x240 and OLED SSD1306 128x64 (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/OCsEqyJ7wu4/hqdefault.jpg)](https://www.youtube.com/watch?v=OCsEqyJ7wu4 "")
-
-### Serial Terminal escape sequences for graphics and sound (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/1TjPOSc_RaI/hqdefault.jpg)](https://www.youtube.com/watch?v=1TjPOSc_RaI "")
-
-### Serial Terminal for MBC2 Z80 Board (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/Ww_pH_ZOLqU/hqdefault.jpg)](https://www.youtube.com/watch?v=Ww_pH_ZOLqU "")
-
-### Graphical User Interface - GUI (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/84ytGdiOih0/hqdefault.jpg)](https://www.youtube.com/watch?v=84ytGdiOih0 "")
-
-### Sound Engine (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/RQtKFgU7OYI/hqdefault.jpg)](https://www.youtube.com/watch?v=RQtKFgU7OYI "")
-
-### Altair 8800 emulator - CP/M text games (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/y0opVifEyS8/hqdefault.jpg)](https://www.youtube.com/watch?v=y0opVifEyS8 "")
-
-### Commodore VIC20 emulator (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/ZW427HVWYys/hqdefault.jpg)](https://www.youtube.com/watch?v=ZW427HVWYys "")
-
-### Simple Terminal Out Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/AmXN0SIRqqU/hqdefault.jpg)](https://www.youtube.com/watch?v=AmXN0SIRqqU "")
-
-### Network Terminal Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/n5c27-y5tm4/hqdefault.jpg)](https://www.youtube.com/watch?v=n5c27-y5tm4 "")
-
-### Modeline Studio Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/Urp0rPukjzE/hqdefault.jpg)](https://www.youtube.com/watch?v=Urp0rPukjzE "")
-
-### Loopback Terminal Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/hQhU5hgWdcU/hqdefault.jpg)](https://www.youtube.com/watch?v=hQhU5hgWdcU "")
-
-### Double Buffering Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/TRQcIiWQCJw/hqdefault.jpg)](https://www.youtube.com/watch?v=TRQcIiWQCJw "")
-
-### Collision Detection Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/q3OPSq4HhDE/hqdefault.jpg)](https://www.youtube.com/watch?v=q3OPSq4HhDE "")
-
-### Multitasking CP/M Plus Example (click for video):
-
-[![Everything Is AWESOME](https://img.youtube.com/vi/3UevsxMQZ5w/hqdefault.jpg)](https://www.youtube.com/watch?v=3UevsxMQZ5w "")
-
-
-
-
-[Donations]: https://github.com/fdivitto/FabGL/wiki/Donations
-[Boards]: https://github.com/fdivitto/FabGL/wiki/Boards
