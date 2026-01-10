@@ -1,0 +1,47 @@
+{
+	"folders": [
+		{
+			"path": "../../Documents/Arduino/libraries/FabGL-nTerm2-S"
+		},
+		{
+			"path": "../../Library/Arduino15/packages/esp32/hardware/esp32"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"vector": "cpp",
+			"regex": "cpp",
+			"ios": "cpp",
+			"__locale": "cpp",
+			"__verbose_abort": "cpp",
+			"bitset": "cpp",
+			"cmath": "cpp",
+			"complex": "cpp",
+			"cstdarg": "cpp",
+			"cstddef": "cpp",
+			"cstdint": "cpp",
+			"cstdio": "cpp",
+			"cstdlib": "cpp",
+			"cstring": "cpp",
+			"ctime": "cpp",
+			"cwchar": "cpp",
+			"execution": "cpp",
+			"memory": "cpp",
+			"initializer_list": "cpp",
+			"iosfwd": "cpp",
+			"istream": "cpp",
+			"limits": "cpp",
+			"locale": "cpp",
+			"mutex": "cpp",
+			"new": "cpp",
+			"ratio": "cpp",
+			"sstream": "cpp",
+			"stdexcept": "cpp",
+			"streambuf": "cpp",
+			"string": "cpp",
+			"string_view": "cpp",
+			"typeinfo": "cpp",
+			"algorithm": "cpp"
+		}
+	}
+}
