@@ -163,6 +163,7 @@ const char * CTRLCHAR_TO_STR[] = {"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK
 Terminal * Terminal::s_activeTerminal = nullptr;
 
 
+
 int Terminal::inputQueueSize = FABGLIB_DEFAULT_TERMINAL_INPUT_QUEUE_SIZE;
 
 int Terminal::inputConsumerTaskStackSize = FABGLIB_DEFAULT_TERMINAL_INPUT_CONSUMER_TASK_STACK_SIZE;
@@ -363,7 +364,7 @@ bool Terminal::begin(BaseDisplayController * displayController, int maxColumns, 
   m_blinkTimer = xTimerCreate("", pdMS_TO_TICKS(FABGLIB_DEFAULT_BLINK_PERIOD_MS), pdTRUE, this, blinkTimerFunc);
   xTimerStart(m_blinkTimer, portMAX_DELAY);
 
-  // queue and task to consume input characters
+  // Queue and task to consume characters received from UART (server).
   m_inputQueue = xQueueCreate(Terminal::inputQueueSize, sizeof(uint8_t));
   xTaskCreate(&charsConsumerTask, "", Terminal::inputConsumerTaskStackSize, this, FABGLIB_CHARS_CONSUMER_TASK_PRIORITY, &m_charsConsumerTaskHandle);
 
@@ -431,6 +432,7 @@ void Terminal::end()
 
 void Terminal::connectKeyboard()
 {
+  // Task to consume characters received from keyboard.
   if (!m_keyboardReaderTaskHandle && m_keyboard->isKeyboardAvailable())
     xTaskCreate(&keyboardReaderTask, "", Terminal::keyboardReaderTaskStackSize, this, FABGLIB_KEYBOARD_READER_TASK_PRIORITY, &m_keyboardReaderTaskHandle);
 }
@@ -1538,7 +1540,11 @@ void Terminal::send(uint8_t c)
 
   onSend(c);
   userOnSend(c);
-    
+
+  if (m_emuState.localEchoEnabled) { 
+    unsafeSetChar(c);
+  }
+
   localWrite(c);  // write to m_outputQueue
 }
 
@@ -1551,6 +1557,10 @@ void Terminal::send(char const * str)
     onSend(*s);
     userOnSend(*s);
     s++;
+  }
+
+  if (m_emuState.localEchoEnabled) { 
+    unsafeSetString(s);
   }
 
   localWrite(str);  // write to m_outputQueue
@@ -1644,7 +1654,6 @@ void Terminal::enableLocalMode(bool on)
 {
   m_localMode = on;
 }
-
 
 void Terminal::setTerminalType(TermType value)
 {
@@ -1892,6 +1901,8 @@ bool Terminal::setChar(uint8_t c)
 {
   bool vscroll = false;
 
+  //Serial.printf("Terminal::setChar: '%c' (0x%02X) at %d,%d%s\n", (c >= ASCII_SPC ? c : '.'), (int)c, m_emuState.cursorX, m_emuState.cursorY, (m_emuState.cursorPastLastCol ? " (past last col)" : ""));
+
   if (m_emuState.cursorPastLastCol) {
     if (m_emuState.wraparound) {
       setCursorPos(1, m_emuState.cursorY); // this sets m_emuState.cursorPastLastCol = false
@@ -1911,6 +1922,7 @@ bool Terminal::setChar(uint8_t c)
   uint32_t * mapItemPtr = m_glyphsBuffer.map + (m_emuState.cursorX - 1) + (m_emuState.cursorY - 1) * m_columns;
   glyphOptions.doubleWidth = glyphMapItem_getOptions(mapItemPtr).doubleWidth;
   Color newForegroundColor;
+
   *mapItemPtr = makeGlyphItem(c, &glyphOptions, &newForegroundColor);
 
   if (m_bitmappedDisplayController && isActive()) {
@@ -2066,15 +2078,11 @@ void Terminal::charsConsumerTask(void * pvParameters)
   taskExit();
 }
 
-
-void Terminal::consumeInputQueue()
+// This will write a character to the terminal at the current cursor position. It is unsafe,
+// meaning that it should be called only when the terminal mutex is already taken.
+void Terminal::unsafeSetChar(uint8_t c)
 {
-  uint8_t c = getNextCode(false);  // blocking call. false: do not process ctrl chars
-
-  if (!m_mutex)
-    return;
-
-  xSemaphoreTake(m_mutex, portMAX_DELAY);
+  // Don't take mutex, this should only be called from send() which already has the mutex
 
   m_prevCursorEnabled = int_enableCursor(false);
   m_prevBlinkingTextEnabled = enableBlinkingText(false);
@@ -2090,11 +2098,34 @@ void Terminal::consumeInputQueue()
   else {
     if (m_emuState.characterSet[m_emuState.characterSetIndex] == 0 || (!m_emuState.ANSIMode && m_emuState.VT52GraphicsMode))
       c = DECGRAPH_TO_CP437[(uint8_t)c];
+
     setChar(c);
   }
 
   enableBlinkingText(m_prevBlinkingTextEnabled);
   int_enableCursor(m_prevCursorEnabled);
+}
+
+
+void Terminal::unsafeSetString(const char *str)
+{
+  while (*str) {
+    unsafeSetChar((uint8_t)(*str));
+    str++;
+  }
+}
+
+// Handle what we receive from server.
+void Terminal::consumeInputQueue()
+{
+  uint8_t c = getNextCode(false);  // blocking call. false: do not process ctrl chars
+
+  if (!m_mutex)
+    return;
+
+  xSemaphoreTake(m_mutex, portMAX_DELAY);
+
+  unsafeSetChar(c);
 
   xSemaphoreGive(m_mutex);
 
@@ -4289,10 +4320,10 @@ void Terminal::keyboardReaderTask(void * pvParameters)
 
       if (term->isActive()) {
 
-	if (term->isInLocalMode()) {
-	  term->onLocalModeVirtualKeyItem(&item);
-	} else {
-   
+        if (term->isInLocalMode()) {
+          term->onLocalModeVirtualKeyItem(&item);
+        } else {
+    
           term->onVirtualKey(&item.vk, item.down);
           term->onVirtualKeyItem(&item);
 
@@ -4300,17 +4331,15 @@ void Terminal::keyboardReaderTask(void * pvParameters)
           term->onReadyToSend(&readyToSend);
 
           if (readyToSend) {
-  
             // note: when flow is locked, no key event is reinjected. This to allow onVirtualKey to always work on last pressed char.
-  
             if (item.down) {
-  
               if (!term->m_emuState.keyAutorepeat && term->m_lastPressedKey == item.vk)
                 continue; // don't repeat
+
               term->m_lastPressedKey = item.vk;
-  
+    
               xSemaphoreTake(term->m_mutex, portMAX_DELAY);
-  
+    
               if (term->m_termInfo == nullptr) {
                 if (term->m_emuState.ANSIMode)
                   term->ANSIDecodeVirtualKey(item);
@@ -4318,24 +4347,20 @@ void Terminal::keyboardReaderTask(void * pvParameters)
                   term->VT52DecodeVirtualKey(item);
               } else
                 term->TermDecodeVirtualKey(item);
-  
+    
               xSemaphoreGive(term->m_mutex);
-  
+    
             } else {
               // !keyDown
               term->m_lastPressedKey = VK_NONE;
-            }
-            
+            }              
           }
-	}
-
+        }
       } else {
           // not active, reinject back
         term->m_keyboard->injectVirtualKey(item, true);
       }
-
     }
-
   }
   taskExit();
 }

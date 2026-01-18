@@ -769,6 +769,7 @@ struct EmuState {
   int          scrollingRegionTop;
   int          scrollingRegionDown;
 
+  bool         localEchoEnabled;
   bool         cursorEnabled;
 
   // true = blinking cursor, false = steady cursor
@@ -888,6 +889,8 @@ class Terminal : public Stream {
 public:
   
   friend class TerminalController;
+
+  void refresh();
 
   Terminal();
 
@@ -1054,6 +1057,27 @@ public:
    * @return The current foreground color.
    */
   Color getForegroundColor() { return m_emuState.foregroundColor; }; 
+
+  /**
+   * @brief Gets the current cursor enabled state.
+   *
+   * @return The current cursor enabled state.
+   */
+  bool getCursorEnabled() { return m_emuState.cursorEnabled; };
+
+  /**
+   * @brief Switches local echo on.
+   */
+  void enableLocalEcho(bool enable) {
+    m_emuState.localEchoEnabled = enable;
+  }
+
+  /**
+   * @brief Gets the current local echo state.
+   */
+  bool getLocalEchoEnabled() {
+    return m_emuState.localEchoEnabled;
+  }
 
   /**
    * @brief Clears the screen.
@@ -1344,9 +1368,6 @@ public:
     * normal delegates will not be called. This is useful if you want the local application to have
     * full control of the terminal screen and the keyboard, e.g. for setup screens.
     *
-    * NOTE: There is not enough memory to save the screens when switching between local and remote
-    *       mode, so the screen will be cleared.
-    *
     * @param on If true, enable local mode. If false, enable remote mode.
     */
   void enableLocalMode(bool on);
@@ -1551,6 +1572,27 @@ public:
    */
   static int keyboardReaderTaskStackSize;
 
+  /**
+   * @brief Returns the current glyphs buffer in use by the terminal. Use for saving/restoring screen contents,
+   *        don't use it for other purposes.
+   *
+   * Terminal should be disabled until you finish using the returned GlyphsBuffer. Call both
+   * (terminalConnector).disableSerialPortRX(true); and (terminal).enableLocalMode(true); to 
+   * make sure that everything is in a stable state and won't change unexpectedely while you
+   * are processing it.
+   */
+  GlyphsBuffer *getCurrentGlyphsBuffer() { return (m_alternateScreenBuffer == true) ? (GlyphsBuffer *)m_alternateMap : &m_glyphsBuffer; }
+
+  /**
+   * @brief Save the current cursor state. Cursor states are saved on a stack and can be restored
+   *        with restoreCursorState().
+   */
+  void saveCursorState();
+
+  /**
+   * @brief Restore a previously saved cursor state.
+   */
+  void restoreCursorState();
 
 protected:
 
@@ -1593,11 +1635,12 @@ private:
   void updateCanvasScrollingRegion();
 
   // multilevel save/restore cursor state
-  void saveCursorState();
-  void restoreCursorState();
   void clearSavedCursorStates();
 
   void erase(int X1, int Y1, int X2, int Y2, uint8_t c, bool maintainDoubleWidth, bool selective);
+
+  void unsafeSetChar(uint8_t c);
+  void unsafeSetString(const char *str);
 
   void consumeInputQueue();
   void consumeESC();
@@ -1637,7 +1680,7 @@ private:
 
   void reverseVideo(bool value);
 
-  void refresh();
+  // void refresh();
   void refresh(int X, int Y);
   void refresh(int X1, int Y1, int X2, int Y2);
 
@@ -1720,10 +1763,10 @@ private:
   bool               m_prevCursorEnabled;
   bool               m_prevBlinkingTextEnabled;
 
-  // task that reads and processes incoming characters
+  // task that reads and processes incoming characters from the UART (server)
   TaskHandle_t       m_charsConsumerTaskHandle;
 
-  // task that reads keyboard input and send ANSI/VT100 codes to serial port
+  // task that reads and parses keyboard input
   TaskHandle_t       m_keyboardReaderTaskHandle;
 
   // true = cursor in reverse state (visible), false = cursor invisible
