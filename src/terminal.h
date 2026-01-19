@@ -896,6 +896,24 @@ public:
 
   ~Terminal();
 
+    /**
+   * @brief Calls the lambda function with the terminal mutex taken, thereby executing the function
+   *        in a thread-safe manner.
+   *
+   * Take care to not do too much work inside the lambda function to avoid blocking other tasks.
+   * Take care to not call any other Terminal method that takes the mutex from inside the lambda
+   * function to avoid deadlocks.
+   * These are:
+   * activate(), deactivate(), reset(), blinkTimerFunc(), charsConsumerTask(), consumeInputQueue(),
+   * keyboardReaderTask(). Other methods might als take the mutex when they call other functions.
+   * Your mileage may vary.
+   */
+  void withLockedTerminal(std::function<void()> func) {
+    xSemaphoreTake(m_mutex, portMAX_DELAY);
+    func();
+    xSemaphoreGive(m_mutex);
+  }
+
   /**
    * @brief Initializes the terminal.
    *
